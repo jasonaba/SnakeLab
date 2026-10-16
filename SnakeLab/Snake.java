@@ -32,6 +32,7 @@ public class Snake extends JPanel implements KeyListener {
 		Graphics2D g2 = (Graphics2D) g;
 		super.paintComponent(g2);
 		draw(g2);
+		g2.drawString("" + size, 10, 10);
 	}
 
 	/**
@@ -113,6 +114,7 @@ public class Snake extends JPanel implements KeyListener {
 					temp.setNext(head.getNext());
 					head.setNext(temp);
 					isGrowing = false;
+					size++;
 				} else if (isRemoving && head.getNext() != null) {// if snake will remove, remove last block
 
 					remove();
@@ -131,6 +133,7 @@ public class Snake extends JPanel implements KeyListener {
 					temp.setNext(head.getNext());
 					head.setNext(temp);
 					isGrowing = false;
+					size++;
 				} else if (isRemoving && head.getNext() != null) {// if snake will remove, remove last block
 
 					remove();
@@ -188,9 +191,17 @@ public class Snake extends JPanel implements KeyListener {
 																				// second to last body part
 			remove.setNext(remove.getNext().getNext());
 			remove = remove.getNext();
+			size--;
 		}
-		remove.setNext(null);// remove the last body part
+		if (remove.getNext() != null) {// if the last one had to be removed (to keep track of the size correctly)
+			remove.setNext(null);// remove the last body part
+			size--;
+		}
+
 		isRemoving = false;
+
 	}
+	
+	
 
 }
