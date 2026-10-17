@@ -1,6 +1,6 @@
-package SnakeLab;
-
 import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
@@ -11,12 +11,12 @@ import javax.swing.JPanel;
 public class Snake extends JPanel implements KeyListener {
 
 	private Body head;
-	private boolean isGrowing, isRemoving;
+	private boolean isGrowing, isColliding;
 	private int size;
 
 	public Snake() {
-		this.setBackground(Color.LIGHT_GRAY);
-		this.setSize(800, 800);
+		this.setBackground(new Color(234, 241, 248));
+		this.setPreferredSize(new Dimension(800, 800));
 		// create the head for this body and give it's top left corner the coordinates
 		// (200,200)
 		this.head = new Body(null, 200, 200);
@@ -25,16 +25,44 @@ public class Snake extends JPanel implements KeyListener {
 		head.setY(200);
 		this.setFocusable(true);
 		this.addKeyListener(this);
+		isColliding = false;
+		isGrowing = false;
 
 	}
 
 	protected void paintComponent(Graphics g) {
 		Graphics2D g2 = (Graphics2D) g;
 		super.paintComponent(g2);
-		draw(g2);
-		g2.drawString("" + size, 10, 10);
-	}
+		drawGrid(g2);
+		draw(g2);//draw snake
+		//draw words on screen when necessary
+		g2.setColor(new Color(30, 70, 170));
+		g2.setFont(new Font("SansSerif", Font.BOLD, 20));
+		g2.drawString("SIZE: " + size, 20, 30);
+		if (isColliding) {
+		    g2.setColor(new Color(255, 100, 100));
+		    g2.setFont(new Font("SansSerif", Font.BOLD, 18));
+		    g2.drawString("You can't move there!", 20, 60);
+		}
 
+	}
+	/*
+	 * Draw a grid for the map
+	 */
+	private void drawGrid(Graphics2D g) {
+	    g.setColor(new Color(209, 223, 236));
+
+	    int cellSize = 40;
+
+	    for (int x = 0; x < getWidth(); x += cellSize) {
+	        g.drawLine(x, 0, x, getHeight());
+	    }
+
+	    for (int y = 0; y < getHeight(); y += cellSize) {
+	        g.drawLine(0, y, getWidth(), y);
+	    }
+	}
+	
 	/**
 	 * Draw every part of the Snake
 	 * 
@@ -44,11 +72,16 @@ public class Snake extends JPanel implements KeyListener {
 		if (head == null) {
 			return;
 		}
+		// draw head as blue, then the body as green with blue outline
 		Body runner = head;
 		g.setColor(Color.blue);
+		g.fillRoundRect(runner.getX(), runner.getY(), runner.getWidth(), runner.getHeight(), 10, 10);
+		runner = runner.getNext();
 		while (runner != null) {
-			g.fillRect(runner.getX(), runner.getY(), runner.getWidth(), runner.getHeight());
 			g.setColor(Color.green);
+			g.fillRoundRect(runner.getX(), runner.getY(), runner.getWidth(), runner.getHeight(), 10, 10);
+			g.setColor(Color.blue);
+			g.drawRoundRect(runner.getX(), runner.getY(), runner.getWidth(), runner.getHeight(), 10, 10);
 			runner = runner.getNext();
 		}
 	}
@@ -60,7 +93,7 @@ public class Snake extends JPanel implements KeyListener {
 	}
 
 	/**
-	 * Moves the character based on the key pressed If the snake is growing/removing
+	 * Moves the character based on the key pressed If the snake is growing/removing (WASD or Arrow Keys)
 	 */
 	@Override
 	public void keyPressed(KeyEvent e) {
@@ -69,82 +102,14 @@ public class Snake extends JPanel implements KeyListener {
 		if (head == null) {
 			return;
 		} else {
-			if (key == KeyEvent.VK_UP) {
-
-				if (isGrowing) {// if snake will grow, add to the block behind the head
-					Body temp = new Body(head.getNext(), head.getX(), head.getY());
-					head.setY(head.getY() - head.getHeight());// move up one block
-					temp.setNext(head.getNext());
-					head.setNext(temp);
-					size++;
-					isGrowing = false;
-				} else if (isRemoving && head.getNext() != null) {// if snake will remove, remove last block
-					remove();
-
-				} else {// we want to move every block, not just the head
-					Body runner = head;
-					Body t1 = new Body(null, runner.getX(), runner.getY());
-					runner.setY(runner.getY() - runner.getHeight());// move the head up one block
-					runner = runner.getNext();
-					move(runner, t1);// move the rest of the snake
-				}
-			} else if (key == KeyEvent.VK_DOWN) {
-				if (isGrowing) {// if snake will grow, add to the block behind the head
-					Body temp = new Body(head.getNext(), head.getX(), head.getY());
-					head.setY(head.getY() + head.getHeight());
-					temp.setNext(head.getNext());
-					head.setNext(temp);
-					size++;
-					isGrowing = false;
-				} else if (isRemoving && head.getNext() != null) {// if snake will remove, remove last block
-
-					remove();
-
-				} else {// we want to move every block, not just the head
-					Body runner = head;
-					Body t1 = new Body(null, runner.getX(), runner.getY());
-					runner.setY(runner.getY() + runner.getHeight());// move the head down one block
-					runner = runner.getNext();
-					move(runner, t1);// move the rest of the snake
-				}
-			} else if (key == KeyEvent.VK_RIGHT) {
-				if (isGrowing) {// if snake will grow, add to the block behind the head
-					Body temp = new Body(head.getNext(), head.getX(), head.getY());
-					head.setX(head.getX() + head.getWidth());
-					temp.setNext(head.getNext());
-					head.setNext(temp);
-					isGrowing = false;
-					size++;
-				} else if (isRemoving && head.getNext() != null) {// if snake will remove, remove last block
-
-					remove();
-
-				} else {// we want to move every block, not just the head
-					Body runner = head;
-					Body t1 = new Body(null, runner.getX(), runner.getY());
-					runner.setX(runner.getX() + runner.getWidth());// move the head right one block
-					runner = runner.getNext();
-					move(runner, t1);// move the rest of the snake
-				}
-			} else if (key == KeyEvent.VK_LEFT) {
-				if (isGrowing) {// if snake will grow, add to the block behind the head
-					Body temp = new Body(head.getNext(), head.getX(), head.getY());
-					head.setX(head.getX() - head.getWidth());
-					temp.setNext(head.getNext());
-					head.setNext(temp);
-					isGrowing = false;
-					size++;
-				} else if (isRemoving && head.getNext() != null) {// if snake will remove, remove last block
-
-					remove();
-
-				} else {// we want to move every block, not just the head
-					Body runner = head;
-					Body t1 = new Body(null, runner.getX(), runner.getY());
-					runner.setX(runner.getX() - runner.getWidth());// move the head left one block
-					runner = runner.getNext();
-					move(runner, t1);// move the rest of the snake
-				}
+			if (key == KeyEvent.VK_UP || key == KeyEvent.VK_W) {
+				moveSnake(0, -40);
+			} else if (key == KeyEvent.VK_DOWN || key == KeyEvent.VK_S) {
+				moveSnake(0, 40);
+			} else if (key == KeyEvent.VK_RIGHT || key == KeyEvent.VK_D) {
+				moveSnake(40, 0);
+			} else if (key == KeyEvent.VK_LEFT || key == KeyEvent.VK_A) {
+				moveSnake(-40, 0);
 			}
 
 		}
@@ -157,35 +122,102 @@ public class Snake extends JPanel implements KeyListener {
 		int key = e.getKeyCode();
 		if (key == KeyEvent.VK_F) {// "Feed" snake, causing it to grow
 			isGrowing = true;
-			isRemoving = false;// Can't remove and add one after another; you have to choose
 		}
 		if (key == KeyEvent.VK_E) {// Make the snake lose one block (can we call it shedding skin--more like
 									// shedding limbs???)
-			isRemoving = true;
-			isGrowing = false;// Can't remove and add one after another; you have to choose
+			shed();
 		}
+		if (key == KeyEvent.VK_R) {
+			reverse();
+		}
+		repaint();
 	}
 
 	/**
-	 * Helper method to move the snake
 	 * 
-	 * @param runner: The variable going through the snake's body
-	 * @param temp1:  The variable holding the space where the moving started
+	 * @param dx
+	 * @param dy
 	 */
-	private void move(Body runner, Body temp1) {
-
-		while (runner != null) {// for normal movement
-			Body temp2 = new Body(null, runner.getX(), runner.getY());// temp where the block that is moving will be
-																		// (like a saved gap)
-			// update the body part's coordinates
-			runner.setX(temp1.getX());
-			runner.setY(temp1.getY());
-			temp1 = temp2;
-			runner = runner.getNext();
+	private void moveSnake(int dx, int dy) {
+		if(head==null)
+			return;
+		Body newHead = new Body(head, head.getX() + dx, head.getY() + dy);//creates new head where proposed move should go
+		head = newHead;
+		if (!isValidMove()) {
+			head = head.getNext();//sets head back to original
+			isColliding = true;
+			isGrowing = false;
+			return;
+		} else {
+			if (!isGrowing) {// removes the tail if it isn't growing
+				popTail();
+			} else {
+				size++;// if it is growing, you keep the tail (so only the head is updated)
+				isGrowing = false;
+			}
 		}
 	}
 
-	private void remove() {
+	/*
+	 * Checks if the user's proposed move is a valid move meaning the head will not
+	 * collide with any part of the body or go out of bounds
+	 */
+	private boolean isValidMove() {
+		if (head.getX()+head.getWidth() > this.getWidth() || head.getX() < 0) {
+			return false;
+		}
+		if (head.getY() + head.getHeight()> this.getHeight() || head.getY() < 0) {
+			return false;
+		} else {
+			Body runner = head;
+			if (!isGrowing) {// if it isn't growing, don't check the tail
+				while (runner.getNext().getNext() != null) {
+					runner = runner.getNext();
+					if (head.getX() == runner.getX() && head.getY() == runner.getY()) {// if the x or y of the head and
+																						// another body part overlap at
+																						// all
+						return false;
+					}
+				}
+			} else {// if it is growing
+				while (runner.getNext() != null) { // check the tail as well
+					runner = runner.getNext();
+					if (head.getX() == runner.getX() && head.getY() == runner.getY()) {// if the x or y of the head and
+																						// another body part overlap at
+																						// all
+						return false;
+					}
+				}
+			}
+		}
+		isColliding = false;
+		return true;
+	}
+
+	/**
+	 * Removes the tail of the snake
+	 */
+	private void popTail() {
+		if (head == null)
+			return;
+		if (head.getNext() == null)
+			return;
+		Body runner = head;
+		while (runner.getNext().getNext() != null) {
+			runner = runner.getNext();
+		}
+		runner.setNext(null);
+
+	}
+
+	/**
+	 * Removes every other body part of the snake (starting at the body part after
+	 * the head
+	 */
+	private void shed() {
+		if(head==null)
+			return;
+		isGrowing = false;
 		Body remove = head;// start at the top
 		while (remove.getNext() != null && remove.getNext().getNext() != null) {// while you are not the
 																				// second to last body part
@@ -198,10 +230,29 @@ public class Snake extends JPanel implements KeyListener {
 			size--;
 		}
 
-		isRemoving = false;
-
 	}
-	
-	
+
+	/**
+	 * Reverses the orientation of the snake (the head becomes the tail, and all
+	 * links to following body parts gets flipped
+	 */
+	private void reverse() {
+		if (head == null)
+			return;
+		if (head.getNext() == null)
+			return;
+		Body runner = head.getNext();
+		Body temp1 = head;// to store linked list's previous value
+		Body temp2 = runner;// to store linked list's next value
+		while (runner.getNext() != null) {
+			temp2 = runner.getNext();
+			runner.setNext(temp1);
+			temp1 = runner;
+			runner = temp2;
+		}
+		runner.setNext(temp1);
+		head.setNext(null);
+		head = runner;
+	}
 
 }
