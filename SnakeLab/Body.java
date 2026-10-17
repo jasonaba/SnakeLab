@@ -1,12 +1,10 @@
-package SnakeLab;
-
 import java.awt.Color;
 
 public class Body {
 	private int x, y, width, height;//location of body piece
-	private Body next; 
+	private Body next; //next body piece this body piece points to
 	
-	//Constructors
+	//Constructor
 	public Body(Body next, int x, int y) {
 		width = 40; height = 40;
 		this.next = next;
