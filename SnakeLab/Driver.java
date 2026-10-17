@@ -1,5 +1,3 @@
-package SnakeLab;
-
 import javax.swing.JFrame;
 
 public class Driver {
@@ -13,6 +11,7 @@ public class Driver {
 		
 		frame.add(board);
 		frame.setLocationRelativeTo(null);
+		frame.pack();//to make frame fit an 800x800 panel
 		frame.setVisible(true);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
