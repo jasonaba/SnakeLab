@@ -170,8 +170,9 @@ public class Snake extends JPanel implements KeyListener {
 			return false;
 		} else {
 			Body runner = head;
-			if (!isGrowing) {// if it isn't growing, don't check the tail
-				while (runner.getNext().getNext() != null) {
+			if (!isGrowing && size!=2) {// if it isn't growing, don't check the tail
+				//this also occurs when the tail right behind the head so it can't go backwards
+				while (runner.getNext().getNext()!= null ) {
 					runner = runner.getNext();
 					if (head.getX() == runner.getX() && head.getY() == runner.getY()) {// if the x or y of the head and
 																						// another body part overlap at
